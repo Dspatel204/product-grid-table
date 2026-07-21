@@ -90,7 +90,7 @@ export default function App() {
       order,
       category,
       skip,
-      limit: 20,
+      limit: 10,
     });
   }, [debouncedQuery, sortBy, order, category, skip, fetchProducts]);
 
@@ -206,7 +206,13 @@ export default function App() {
           </button>
         </div>
 
-        {loading && (
+        {error && (
+          <div className="rounded-xl border border-danger/20 bg-red-50 p-4 text-sm text-danger shadow-sm">
+            Error: {error}
+          </div>
+        )}
+
+        {loading || !data ? (
           <div className="rounded-xl border border-border bg-surface shadow-sm overflow-hidden">
             <table className="w-full border-collapse">
               <thead>
@@ -220,21 +226,13 @@ export default function App() {
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({ length: 10 }).map((_, i) => (
                   <SkeletonRow key={i} />
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-
-        {error && (
-          <div className="rounded-xl border border-danger/20 bg-red-50 p-4 text-sm text-danger shadow-sm">
-            Error: {error}
-          </div>
-        )}
-
-        {data && data.products.length > 0 ? (
+        ) : data.products.length > 0 ? (
           <VirtualizedGrid
             products={data.products}
             edits={edits}
@@ -244,11 +242,9 @@ export default function App() {
             savingRows={savingRows}
           />
         ) : (
-          !loading && (
-            <div className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-muted shadow-sm">
-              No products found.
-            </div>
-          )
+          <div className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-muted shadow-sm">
+            No products found.
+          </div>
         )}
 
         {data && (
