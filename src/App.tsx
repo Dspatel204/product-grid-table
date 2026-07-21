@@ -186,6 +186,7 @@ export default function App() {
         </select>
 
         <button
+          className="save-all-btn"
           onClick={handleSaveAll}
           disabled={Object.keys(edits).length === 0}
           style={{
