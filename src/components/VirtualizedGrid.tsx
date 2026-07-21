@@ -51,43 +51,23 @@ export const VirtualizedGrid: React.FC<GridProps> = ({
   return (
     <div
       ref={containerRef}
-      style={{
-        height: viewportHeight,
-        overflowY: "auto",
-        position: "relative",
-        border: "1px solid #ccc",
-      }}
+      className="h-[400px] overflow-y-auto rounded-xl border border-border bg-surface shadow-sm"
+      style={{ height: viewportHeight }}
     >
-      <div style={{ height: totalHeight, width: "100%", position: "relative" }}>
+      <div className="relative w-full" style={{ height: totalHeight }}>
         <div
-          style={{
-            transform: `translateY(${offsetY}px)`,
-            position: "absolute",
-            left: 0,
-            right: 0,
-          }}
+          className="absolute left-0 right-0"
+          style={{ transform: `translateY(${offsetY}px)` }}
         >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              background: "#fff",
-            }}
-          >
+          <table className="w-full border-collapse bg-surface">
             <thead>
-              <tr
-                style={{
-                  background: "#f5f5f5",
-                  borderBottom: "2px solid #ddd",
-                  height: "40px",
-                }}
-              >
-                <th>Actions</th>
-                <th>Title</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Rating</th>
-                <th>Category</th>
+              <tr className="bg-gray-100 border-b-2 border-border" style={{ height: "40px" }}>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Title</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Price</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Stock</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Rating</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Category</th>
               </tr>
             </thead>
             <tbody>
@@ -104,21 +84,15 @@ export const VirtualizedGrid: React.FC<GridProps> = ({
                       : product[field];
                   const err = rowErrors[field];
                   return (
-                    <td
-                      style={{
-                        padding: "8px",
-                        borderBottom: "1px solid #ddd",
-                        position: "relative",
-                      }}
-                    >
+                    <td className="relative px-4 py-3 border-b border-border" style={{ padding: "8px" }}>
                       <input
                         type={type}
                         value={val}
-                        style={{
-                          border: err ? "1px solid red" : "1px solid #ccc",
-                          width: "90%",
-                          padding: "4px",
-                        }}
+                        className={`w-[90%] rounded-md border px-2 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 ${
+                          err
+                            ? "border-danger focus:border-danger focus:ring-danger/20"
+                            : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                        }`}
                         onChange={(e) => {
                           const v =
                             type === "number"
@@ -131,14 +105,7 @@ export const VirtualizedGrid: React.FC<GridProps> = ({
                         }}
                       />
                       {err && (
-                        <div
-                          style={{
-                            color: "red",
-                            fontSize: "10px",
-                            position: "absolute",
-                            bottom: -2,
-                          }}
-                        >
+                        <div className="absolute bottom-0 left-0 text-[10px] text-danger">
                           {err}
                         </div>
                       )}
@@ -149,19 +116,18 @@ export const VirtualizedGrid: React.FC<GridProps> = ({
                 return (
                   <tr
                     key={product.id}
-                    style={{
-                      height: rowHeight,
-                      background: isDirty ? "#fffde7" : "transparent",
-                    }}
+                    className={`transition-colors ${
+                      isDirty ? "bg-dirty" : "bg-surface hover:bg-gray-50"
+                    }`}
+                    style={{ height: rowHeight }}
                   >
-                    <td
-                      style={{ padding: "8px", borderBottom: "1px solid #ddd" }}
-                    >
+                    <td className="px-4 py-3 border-b border-border" style={{ padding: "8px" }}>
                       <button
                         disabled={
                           !isDirty || hasError || savingRows[product.id]
                         }
                         onClick={() => onSaveRow(product.id)}
+                        className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {savingRows[product.id] ? "Saving..." : "Save"}
                       </button>

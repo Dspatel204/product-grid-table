@@ -3,6 +3,31 @@ import { useProductFetch } from "./hooks/useProductFetch";
 import { VirtualizedGrid } from "./components/VirtualizedGrid";
 import type { EditState, ValidationErrors } from "./types";
 
+function SkeletonRow() {
+  return (
+    <tr className="animate-pulse">
+      <td className="px-4 py-3 border-b border-border">
+        <div className="h-8 w-16 bg-gray-200 rounded-md" />
+      </td>
+      <td className="px-4 py-3 border-b border-border">
+        <div className="h-8 w-48 bg-gray-200 rounded-md" />
+      </td>
+      <td className="px-4 py-3 border-b border-border">
+        <div className="h-8 w-20 bg-gray-200 rounded-md" />
+      </td>
+      <td className="px-4 py-3 border-b border-border">
+        <div className="h-8 w-20 bg-gray-200 rounded-md" />
+      </td>
+      <td className="px-4 py-3 border-b border-border">
+        <div className="h-8 w-16 bg-gray-200 rounded-md" />
+      </td>
+      <td className="px-4 py-3 border-b border-border">
+        <div className="h-8 w-28 bg-gray-200 rounded-md" />
+      </td>
+    </tr>
+  );
+}
+
 export default function App() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -11,14 +36,12 @@ export default function App() {
   const [category, setCategory] = useState("");
   const [skip, setSkip] = useState(0);
 
-  // Unsaved Edits State
   const [edits, setEdits] = useState<Record<number, EditState>>({});
   const [errors, setErrors] = useState<Record<number, ValidationErrors>>({});
   const [savingRows, setSavingRows] = useState<Record<number, boolean>>({});
 
   const { data, loading, error, fetchProducts, setData } = useProductFetch();
 
-  // For rolling back inputs if user cancels the grid update
   const previousStateRef = useRef({
     debouncedQuery,
     sortBy,
@@ -27,13 +50,11 @@ export default function App() {
     skip,
   });
 
-  // Debounce query
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedQuery(query), 300);
     return () => clearTimeout(handler);
   }, [query]);
 
-  // Intercept changes and check for unsaved edits
   useEffect(() => {
     const hasUnsavedEdits = Object.keys(edits).length > 0;
 
@@ -42,7 +63,6 @@ export default function App() {
         "You have unsaved edits! Discard changes and load new results?",
       );
       if (!confirmDiscard) {
-        // Rollback current state to match the loaded data state
         setQuery(previousStateRef.current.debouncedQuery);
         setDebouncedQuery(previousStateRef.current.debouncedQuery);
         setSortBy(previousStateRef.current.sortBy);
@@ -51,13 +71,11 @@ export default function App() {
         setSkip(previousStateRef.current.skip);
         return;
       } else {
-        // Clear edits if user proceeds
         setEdits({});
         setErrors({});
       }
     }
 
-    // Update previous valid state reference
     previousStateRef.current = {
       debouncedQuery,
       sortBy,
@@ -106,7 +124,6 @@ export default function App() {
       if (!response.ok) throw new Error("Failed to save");
       const updatedProduct = await response.json();
 
-      // Optimistic layout update with response payload
       if (data) {
         setData({
           ...data,
@@ -116,7 +133,6 @@ export default function App() {
         });
       }
 
-      // Clear edit status for this row
       setEdits((prev) => {
         const n = { ...prev };
         delete n[id];
@@ -146,95 +162,119 @@ export default function App() {
   };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-      <h2>Searchable & Editable Product Grid</h2>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="mx-auto max-w-7xl">
+        <h2 className="mb-6 text-2xl font-bold text-gray-900">
+          Searchable & Editable Product Grid
+        </h2>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          marginBottom: "20px",
-          alignItems: "center",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Search items..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          style={{ padding: "8px", width: "250px" }}
-        />
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search items..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="rounded-lg border border-border bg-surface px-4 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
 
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          style={{ padding: "8px" }}
-        >
-          <option value="title">Title</option>
-          <option value="price">Price</option>
-          <option value="rating">Rating</option>
-          <option value="stock">Stock</option>
-        </select>
-
-        <select
-          value={order}
-          onChange={(e) => setOrder(e.target.value as "asc" | "desc")}
-          style={{ padding: "8px" }}
-        >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-
-        <button
-          className="save-all-btn"
-          onClick={handleSaveAll}
-          disabled={Object.keys(edits).length === 0}
-          style={{
-            marginLeft: "auto",
-            background: "green",
-            color: "white",
-            padding: "10px",
-          }}
-        >
-          Save All Changed
-        </button>
-      </div>
-
-      {loading && <p>Loading remote records...</p>}
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
-
-      {data && data.products.length > 0 ? (
-        <VirtualizedGrid
-          products={data.products}
-          edits={edits}
-          errors={errors}
-          onCellChange={handleCellChange}
-          onSaveRow={handleSaveRow}
-          savingRows={savingRows}
-        />
-      ) : (
-        !loading && <p>No products found.</p>
-      )}
-
-      {data && (
-        <div style={{ marginTop: "10px" }}>
-          <button
-            disabled={skip === 0}
-            onClick={() => setSkip((prev) => Math.max(0, prev - 20))}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="rounded-lg border border-border bg-surface px-4 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
-            Prev
-          </button>
-          <span style={{ margin: "0 10px" }}>
-            Showing {skip + 1} - {skip + data.products.length} of {data.total}
-          </span>
-          <button
-            disabled={skip + 20 >= data.total}
-            onClick={() => setSkip((prev) => prev + 20)}
+            <option value="title">Title</option>
+            <option value="price">Price</option>
+            <option value="rating">Rating</option>
+            <option value="stock">Stock</option>
+          </select>
+
+          <select
+            value={order}
+            onChange={(e) => setOrder(e.target.value as "asc" | "desc")}
+            className="rounded-lg border border-border bg-surface px-4 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
-            Next
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+
+          <button
+            onClick={handleSaveAll}
+            disabled={Object.keys(edits).length === 0}
+            className="ml-auto rounded-lg bg-success px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-success-dark disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Save All Changed
           </button>
         </div>
-      )}
+
+        {loading && (
+          <div className="rounded-xl border border-border bg-surface shadow-sm overflow-hidden">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100 border-b-2 border-border">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Title</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Price</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Stock</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Rating</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Category</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <SkeletonRow key={i} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-xl border border-danger/20 bg-red-50 p-4 text-sm text-danger shadow-sm">
+            Error: {error}
+          </div>
+        )}
+
+        {data && data.products.length > 0 ? (
+          <VirtualizedGrid
+            products={data.products}
+            edits={edits}
+            errors={errors}
+            onCellChange={handleCellChange}
+            onSaveRow={handleSaveRow}
+            savingRows={savingRows}
+          />
+        ) : (
+          !loading && (
+            <div className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-muted shadow-sm">
+              No products found.
+            </div>
+          )
+        )}
+
+        {data && (
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                disabled={skip === 0}
+                onClick={() => setSkip((prev) => Math.max(0, prev - 20))}
+                className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <button
+                disabled={skip + 20 >= data.total}
+                onClick={() => setSkip((prev) => prev + 20)}
+                className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+            <span className="text-sm text-muted">
+              Showing {skip + 1} - {skip + data.products.length} of {data.total}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
