@@ -65,7 +65,11 @@ function GridCard({
           </label>
           <textarea
             value={val ?? ""}
-            className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white resize-none"
+            className={`w-full rounded-lg border px-2.5 py-1.5 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 ${
+              err
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500/80"
+                : "border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-blue-500/15 dark:border-slate-600 dark:hover:border-slate-500 dark:focus:border-blue-500"
+            } dark:bg-slate-800 dark:text-white resize-none`}
             rows={2}
             onChange={(e) => {
               const v = e.target.value;
@@ -88,7 +92,13 @@ function GridCard({
           <input
             type={type}
             value={val ?? ""}
-            className={`w-full rounded-lg border border-gray-200 ${isEditing && icon ? "pl-8" : "pl-2.5"} pr-2.5 py-1.5 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white`}
+            className={`w-full rounded-lg border ${
+              isEditing && icon ? "pl-8" : "pl-2.5"
+            } pr-2.5 py-1.5 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 ${
+              err
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500/80"
+                : "border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-blue-500/15 dark:border-slate-600 dark:hover:border-slate-500 dark:focus:border-blue-500"
+            } dark:bg-slate-800 dark:text-white`}
             onChange={(e) => {
               const v = type === "number" ? (e.target.value === "" ? "" : Number(e.target.value)) : e.target.value;
               const errorMsg = validateField(editField, v);

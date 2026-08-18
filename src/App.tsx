@@ -10,18 +10,9 @@ import { BulkActions } from "./components/BulkActions";
 import { EmptyState } from "./components/EmptyState";
 import { ALL_COLUMNS } from "./components/ColumnToggle";
 import type { EditState, ValidationErrors, ViewMode, ColumnKey } from "./types";
+import { COL_WIDTHS, getTableMinWidth } from "./types";
 import { Sun, Moon, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
 
-const COL_WIDTHS: Record<ColumnKey, string> = {
-  title: "min-w-0 flex-1",
-  price: "w-24",
-  discountPercentage: "w-24",
-  rating: "w-20",
-  stock: "w-20",
-  availabilityStatus: "w-28",
-  brand: "w-24",
-  category: "w-28",
-};
 
 function SkeletonCard() {
   return (
@@ -394,26 +385,30 @@ function App() {
               <StatusBar total={0} showing={{ start: 0, end: 0 }} selectedCount={0} loading />
               {viewMode === "table" ? (
                 <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-                  <div className="flex items-center border-b border-gray-200 bg-gray-50/95 dark:border-slate-700 dark:bg-slate-800 min-w-[960px]" style={{ height: "44px" }}>
-                    {ALL_COLUMNS.map((col) => (
-                      <div key={col.key} className={`px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider ${COL_WIDTHS[col.key]} dark:text-slate-400`}>
-                        {col.label}
-                      </div>
-                    ))}
-                    <div className="w-[72px] flex-shrink-0 px-3 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-slate-400">Actions</div>
-                  </div>
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="flex items-center border-b border-gray-100 bg-white dark:bg-slate-900 min-w-[960px]" style={{ height: 56 }}>
-                      {ALL_COLUMNS.map((col) => (
-                        <div key={col.key} className={`px-3 py-3 ${COL_WIDTHS[col.key]}`}>
-                          <div className="h-4 w-full rounded-md skeleton-shimmer" style={{ maxWidth: col.key === "title" ? "70%" : "100px" }} />
+                  <div className="flex flex-col" style={{ minWidth: getTableMinWidth(visibleColumns) }}>
+                    <div className="flex items-center border-b border-gray-200 bg-gray-50/95 dark:border-slate-700 dark:bg-slate-800" style={{ height: "44px" }}>
+                      <div className="w-11 flex-shrink-0" />
+                      {ALL_COLUMNS.filter((col) => visibleColumns.includes(col.key)).map((col) => (
+                        <div key={col.key} className={`px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider ${COL_WIDTHS[col.key]} dark:text-slate-400`}>
+                          {col.label}
                         </div>
                       ))}
-                      <div className="w-[72px] flex-shrink-0 px-3">
-                        <div className="h-8 w-16 rounded-lg skeleton-shimmer mx-auto" />
-                      </div>
+                      <div className="w-[72px] flex-shrink-0 px-3 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-slate-400">Actions</div>
                     </div>
-                  ))}
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <div key={i} className="flex items-center border-b border-gray-100 bg-white dark:bg-slate-900" style={{ height: 56 }}>
+                        <div className="w-11 flex-shrink-0" />
+                        {ALL_COLUMNS.filter((col) => visibleColumns.includes(col.key)).map((col) => (
+                          <div key={col.key} className={`px-3 py-3 ${COL_WIDTHS[col.key]}`}>
+                            <div className="h-4 w-full rounded-md skeleton-shimmer" style={{ maxWidth: col.key === "title" ? "70%" : "100px" }} />
+                          </div>
+                        ))}
+                        <div className="w-[72px] flex-shrink-0 px-3">
+                          <div className="h-8 w-16 rounded-lg skeleton-shimmer mx-auto" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

@@ -12,6 +12,9 @@ A professional sales and inventory management dashboard built with React 19, Typ
 ### Product Management
 - **Dual View Modes** - Switch between responsive table and grid card views
 - **Inline Editing** - Edit product fields directly in the grid with real-time validation
+- **Responsive Inline Inputs** - Form inputs adjust size cleanly to columns with optimized widths and no redundant internal icons in table view to maximize space. Features a premium visual design with dynamic error states (red borders and hover interactions)
+- **Unified Scrolling Header & Body** - Both header and content scroll horizontally in perfect alignment, keeping layout consistent at any screen size
+- **Non-blocking Error Tooltips** - Validation errors float as tooltips over adjacent rows instead of shifting layout or breaking virtualization
 - **Row-Level Edit Mode** - Click any table row to edit all fields at once
 - **Bulk Operations** - Select multiple products for bulk delete operations
 - **Row-Level Save** - Save individual product changes instantly
@@ -107,7 +110,8 @@ src/
 - Custom lightweight virtualizer renders only visible rows plus a 2-row buffer
 - Uses CSS `translateY` transforms for smooth scrolling performance
 - Maintains 60fps performance with large datasets
-- Horizontal scroll support for responsive table view
+- **Unified Horizontal Scroll Wrapper** - Encloses both the virtual table header and the absolute-positioned virtual list container to ensure perfect sync on horizontal scrolls
+- **Dynamic Table Min-Width** - Calculated programmatically via `getTableMinWidth(visibleColumns)` so that scrollbars only trigger when remaining visible columns exceed the viewport, preventing empty white spaces and unnecessary scrolling
 
 ### Caching
 - API responses are cached using a `Map` with serialized request parameters as keys
