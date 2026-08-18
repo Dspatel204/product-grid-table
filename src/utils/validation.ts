@@ -45,6 +45,14 @@ export const validateField = (
       const brandStr = String(value);
       if (brandStr.length < 1 || brandStr.length > 50) return "Length must be 1 to 50";
       break;
+    case "category":
+      const catStr = String(value);
+      if (catStr.length < 1 || catStr.length > 50) return "Length must be 1 to 50";
+      break;
+    case "availabilityStatus":
+      const statusStr = String(value);
+      if (statusStr.length < 1 || statusStr.length > 30) return "Length must be 1 to 30";
+      break;
   }
   return null;
 };

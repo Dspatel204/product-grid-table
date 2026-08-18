@@ -36,7 +36,6 @@ const COL_WIDTHS: Record<ColumnKey, string> = {
 };
 
 const HEADERS = ["Title", "Price", "Discount", "Rating", "Stock", "Availability", "Brand", "Category"] as const;
-const EDITABLE_FIELDS: ColumnKey[] = ["price", "discountPercentage", "rating", "stock", "brand"];
 const FIELD_KEYS: ColumnKey[] = ["title", "price", "discountPercentage", "rating", "stock", "availabilityStatus", "brand", "category"];
 
 export const VirtualizedGrid: React.FC<GridProps> = ({
@@ -79,6 +78,136 @@ export const VirtualizedGrid: React.FC<GridProps> = ({
   const offsetY = startIndex * rowHeight;
 
   const visibleHeaders = HEADERS.filter((_, i) => visibleColumns.includes(FIELD_KEYS[i]));
+
+  const getIcon = (field: ColumnKey) => {
+    switch (field) {
+      case "price":
+        return <DollarSign className="h-3.5 w-3.5 text-gray-400" />;
+      case "discountPercentage":
+        return <Percent className="h-3.5 w-3.5 text-gray-400" />;
+      case "rating":
+        return <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />;
+      case "stock":
+        return <Package className="h-3.5 w-3.5 text-gray-400" />;
+      case "availabilityStatus":
+        return <Warehouse className="h-3.5 w-3.5 text-gray-400" />;
+      case "brand":
+        return <Tag className="h-3.5 w-3.5 text-gray-400" />;
+      default:
+        return null;
+    }
+  };
+
+  const renderCell = (product: Product, field: ColumnKey, type = "text") => {
+    const editField = field as keyof EditState;
+    const rowEdits = edits[product.id] || {};
+    const rowErrors = errors[product.id] || {};
+    const val = rowEdits[editField] !== undefined ? rowEdits[editField] : product[editField];
+    const err = rowErrors[editField];
+    const isEditing = editingId === product.id;
+    const isEditable = true;
+
+    if (field === "availabilityStatus") {
+      const stockLow = product.stock < 10;
+      if (!isEditing) {
+        return (
+          <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
+            <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold ${
+              stockLow
+                ? "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-400"
+                : "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-400"
+            }`}>
+              {stockLow ? "Low Stock" : "In Stock"}
+            </span>
+          </div>
+        );
+      }
+    }
+
+    if (!isEditing || !isEditable) {
+      if (field === "title") {
+        return (
+          <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
+            <span className="text-sm font-medium text-gray-900 dark:text-white truncate block" title={String(val)}>
+              {val !== undefined && val !== null ? String(val) : "-"}
+            </span>
+          </div>
+        );
+      }
+      if (field === "brand" || field === "category") {
+        return (
+          <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
+            <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:bg-slate-700 dark:text-slate-300">
+              {val !== undefined && val !== null ? String(val) : "-"}
+            </span>
+          </div>
+        );
+      }
+      return (
+        <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
+          <span className="text-sm text-gray-700 dark:text-slate-300 truncate block">
+            {val !== undefined && val !== null ? String(val) : "-"}
+          </span>
+        </div>
+      );
+    }
+
+    const icon = getIcon(field);
+
+    if (field === "title") {
+      return (
+        <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
+          <div className="relative">
+            <textarea
+              value={val ?? ""}
+              className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400 resize-none"
+              rows={2}
+              onChange={(e) => {
+                const v = e.target.value;
+                const errorMsg = validateField(editField, v);
+                onCellChange(product.id, editField, v, errorMsg);
+              }}
+            />
+            {err && (
+              <div className="mt-0.5 text-[10px] text-red-500 dark:text-red-400 animate-slide-in">
+                {err}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
+        <div className="relative flex items-center">
+          {icon && (
+            <span className="absolute left-2.5 flex items-center pointer-events-none">
+              {icon}
+            </span>
+          )}
+          <input
+            type={type}
+            value={val ?? ""}
+            className={`w-full rounded-lg border border-gray-200 ${icon ? "pl-8" : "pl-2.5"} pr-2.5 py-1.5 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400`}
+            onChange={(e) => {
+              const v = type === "number" ? (e.target.value === "" ? "" : Number(e.target.value)) : e.target.value;
+              const errorMsg = validateField(editField, v);
+              onCellChange(product.id, editField, v, errorMsg);
+            }}
+          />
+          {field === "discountPercentage" && (
+            <span className="absolute right-2.5 text-xs text-gray-400 pointer-events-none">%</span>
+          )}
+        </div>
+        {err && (
+          <div className="mt-0.5 text-[10px] text-red-500 dark:text-red-400 animate-slide-in">
+            {err}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden dark:border-slate-700 dark:bg-slate-800">
@@ -131,99 +260,6 @@ export const VirtualizedGrid: React.FC<GridProps> = ({
                 const isSaving = savingRows[product.id];
                 const isEditing = editingId === product.id;
 
-                const renderCell = (field: ColumnKey, type = "text") => {
-                  const editField = field as keyof EditState;
-                  const val = rowEdits[editField] !== undefined ? rowEdits[editField] : product[editField];
-                  const err = rowErrors[editField];
-
-                  if (field === "availabilityStatus") {
-                    const stockLow = product.stock < 10;
-                    return (
-                      <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
-                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold ${
-                          stockLow
-                            ? "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-400"
-                            : "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-400"
-                        }`}>
-                          {stockLow ? "Low Stock" : "In Stock"}
-                        </span>
-                      </div>
-                    );
-                  }
-
-                  const isEditable = EDITABLE_FIELDS.includes(field);
-
-                  if (isEditing && isEditable) {
-                    const icon = field === "price" ? <DollarSign className="h-3.5 w-3.5 text-gray-400" /> :
-                      field === "discountPercentage" ? <Percent className="h-3.5 w-3.5 text-gray-400" /> :
-                      field === "rating" ? <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> :
-                      field === "stock" ? <Package className="h-3.5 w-3.5 text-gray-400" /> :
-                      field === "brand" ? <Tag className="h-3.5 w-3.5 text-gray-400" /> :
-                      <Warehouse className="h-3.5 w-3.5 text-gray-400" />;
-
-                    return (
-                      <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
-                        <div className="relative flex items-center">
-                          <span className="absolute left-2.5 flex items-center pointer-events-none">
-                            {icon}
-                          </span>
-                          <input
-                            type={type}
-                            value={val ?? ""}
-                            className="w-full rounded-lg border border-gray-200 pl-8 pr-2.5 py-1.5 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400"
-                            onChange={(e) => {
-                              const v =
-                                type === "number"
-                                  ? e.target.value === ""
-                                    ? ""
-                                    : Number(e.target.value)
-                                  : e.target.value;
-                              const errorMsg = validateField(editField, v);
-                              onCellChange(product.id, editField, v, errorMsg);
-                            }}
-                          />
-                          {field === "discountPercentage" && (
-                            <span className="absolute right-2.5 text-xs text-gray-400 pointer-events-none">%</span>
-                          )}
-                        </div>
-                        {err && (
-                          <div className="mt-0.5 text-[10px] text-red-500 dark:text-red-400 animate-slide-in">
-                            {err}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  if (!isEditable) {
-                    return (
-                      <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
-                        {field === "title" ? (
-                          <span className="text-sm font-medium text-gray-900 dark:text-white truncate block">
-                            {val !== undefined && val !== null ? String(val) : "-"}
-                          </span>
-                        ) : field === "brand" || field === "category" ? (
-                          <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 dark:bg-slate-700 dark:text-slate-300">
-                            {val !== undefined && val !== null ? String(val) : "-"}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-gray-700 dark:text-slate-300 truncate block">
-                            {val !== undefined && val !== null ? String(val) : "-"}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div className={`px-3 py-1.5 ${COL_WIDTHS[field]}`}>
-                      <span className="text-sm text-gray-700 dark:text-slate-300 truncate block">
-                        {val !== undefined && val !== null ? String(val) : "-"}
-                      </span>
-                    </div>
-                  );
-                };
-
                 return (
                   <div
                     key={product.id}
@@ -234,7 +270,7 @@ export const VirtualizedGrid: React.FC<GridProps> = ({
                           ? "bg-blue-50/50 dark:bg-blue-950/15"
                           : "bg-white hover:bg-gray-50/80 dark:bg-slate-900 dark:hover:bg-slate-800/60"
                     } ${isEditing ? "ring-2 ring-blue-500/20" : ""}`}
-                    style={{ height: rowHeight, animationDelay: `${idx * 15}ms` }}
+                    style={{ height: isEditing ? "auto" : rowHeight, minHeight: rowHeight, animationDelay: `${idx * 15}ms` }}
                   >
                     <div className="w-11 flex-shrink-0 flex items-center justify-center">
                       <button
@@ -249,7 +285,7 @@ export const VirtualizedGrid: React.FC<GridProps> = ({
                       </button>
                     </div>
                     {FIELD_KEYS.filter((k) => visibleColumns.includes(k)).map((field) =>
-                      renderCell(field, field === "price" || field === "discountPercentage" || field === "rating" || field === "stock" ? "number" : "text")
+                      renderCell(product, field, field === "price" || field === "discountPercentage" || field === "rating" || field === "stock" ? "number" : "text")
                     )}
                     <div className="w-[72px] flex-shrink-0 px-3 flex justify-end gap-0.5">
                       {isEditing ? (

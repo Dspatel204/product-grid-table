@@ -458,7 +458,10 @@ function App() {
                   onCellChange={handleCellChange}
                   onSaveRow={handleSaveRow}
                   onDeleteRow={handleDeleteRow}
+                  onEditRow={handleEditRow}
+                  onCancelEdit={handleCancelEdit}
                   savingRows={savingRows}
+                  editingId={editingId}
                 />
               )}
             </div>

@@ -35,6 +35,7 @@ export interface EditState {
   rating?: number;
   brand?: string;
   discountPercentage?: number;
+  availabilityStatus?: string;
 }
 
 export type ValidationErrors = {
