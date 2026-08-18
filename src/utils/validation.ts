@@ -19,6 +19,11 @@ export const validateField = (
       if (!/^\d+(\.\d{1,2})?$/.test(String(value)))
         return "Max 2 decimal places";
       break;
+    case "discountPercentage":
+      const numDiscount = Number(value);
+      if (isNaN(numDiscount) || numDiscount < 0 || numDiscount > 100)
+        return "Must be between 0 and 100";
+      break;
     case "stock":
       const numStock = Number(value);
       if (
@@ -35,6 +40,10 @@ export const validateField = (
       if (isNaN(numRating) || numRating < 0 || numRating > 5)
         return "Must be between 0 and 5";
       if (!/^\d+(\.\d{1})?$/.test(String(value))) return "Max 1 decimal place";
+      break;
+    case "brand":
+      const brandStr = String(value);
+      if (brandStr.length < 1 || brandStr.length > 50) return "Length must be 1 to 50";
       break;
   }
   return null;
